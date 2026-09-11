@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연주 | 사진과 코드</title>
+<meta name="description" content="웨딩 사진을 찍고 웹을 만드는 연주의 포트폴리오">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #E4E5E0;   /* silver gelatin paper */
+    --ink: #17181A;
+    --mute: #5A6064;
+    --rule: #B9BCB5;
+    --dark: #161211;    /* darkroom */
+    --dark-ink: #EDE6E1;
+    --dark-mute: #B3A8A2;
+    --safe: #C2412D;    /* safelight */
+    --serif: "Gowun Batang", "Nanum Myeongjo", serif;
+    --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --gutter: clamp(16px, 4vw, 56px);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; } /* class display rules (.intro, .group) must not override it */
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 17px/1.75 var(--sans);
+    word-break: keep-all;
+  }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  /* Korean line breaks: keep-all on words, nowrap on phrase units, balance/pretty for ragged edges */
+  h1, h2, h3, .big, .card-names { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  .nw { white-space: nowrap; }
+  :focus-visible { outline: 2px solid var(--safe); outline-offset: 3px; }
+
+  /* nav: difference blend keeps it legible over paper, photos and darkroom */
+  .nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px var(--gutter);
+    color: #fff; mix-blend-mode: difference;
+  }
+  .nav a { text-decoration: none; font-weight: 500; }
+  .nav .name { font: 700 20px/1 var(--serif); }
+  .nav ul { display: flex; gap: clamp(16px, 3vw, 36px); list-style: none; margin: 0; padding: 0; }
+
+  /* hero */
+  .hero {
+    min-height: 100svh;
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter); align-items: end;
+    padding: 96px var(--gutter) 56px;
+  }
+  .hero-photo { grid-column: 6 / 13; grid-row: 1; margin: 0; height: min(82svh, 920px); overflow: hidden; }
+  .hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+  /* no z-index here: a stacking context would isolate the h1 blend from the photo */
+  .hero-copy { grid-column: 1 / 9; grid-row: 1; position: relative; padding-bottom: 5vh; }
+  .hero h1 {
+    margin: 0;
+    font: 700 clamp(40px, 6.6vw, 100px)/1.14 var(--serif);
+    letter-spacing: -0.01em;
+    color: #fff; mix-blend-mode: difference; /* reads as a film negative where it crosses the photo */
+  }
+  .hero h1 .line { display: block; overflow: hidden; padding-bottom: 0.06em; }
+  .hero h1 .line > span { display: block; }
+  .hero p { max-width: 24em; margin: 28px 0 0; color: var(--mute); }
+
+  /* develop: the pinned scroll moment */
+  .develop { background: var(--dark); color: var(--dark-ink); }
+  .develop-inner {
+    min-height: 100svh;
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(28px, 5vw, 88px); align-items: center;
+    padding: 96px var(--gutter);
+  }
+  .develop-photo { margin: 0; aspect-ratio: 4 / 5; max-height: 78svh; max-width: 100%; overflow: hidden; background: #EDE9E4; }
+  .develop-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .develop h2 { margin: 0 0 16px; font: 700 clamp(30px, 3.6vw, 54px)/1.2 var(--serif); }
+  .develop .lede { max-width: 26em; margin: 0 0 32px; color: var(--dark-mute); }
+  .code {
+    margin: 0; padding: 22px 24px; overflow-x: auto;
+    background: #0E0B0A; border-left: 2px solid var(--safe);
+    font: 400 14px/1.85 ui-monospace, "Cascadia Code", Consolas, monospace; color: #D9CFC9;
+  }
+  .code .ln { display: inline-block; min-height: 1em; }
+  .tok-k { color: #E48A73; } .tok-s { color: #CDBB9F; } .tok-n { color: #E0B062; } .tok-c { color: #857872; }
+  .timer { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+  .gauge {
+    flex: 1; height: 8px; position: relative; overflow: hidden;
+    background: repeating-linear-gradient(90deg, #3C302C 0 calc(10% - 2px), var(--dark) 0 10%);
+  }
+  .gauge span { position: absolute; inset: 0; background: var(--safe); transform-origin: left; }
+  .timer output { min-width: 4ch; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* gallery: pinned horizontal strip on desktop, native swipe elsewhere */
+  .gallery { padding-block: 120px 96px; }
+  .section-head {
+    display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px 48px;
+    padding-inline: var(--gutter); margin-bottom: 44px;
+  }
+  .section-head h2 { margin: 0; font: 700 clamp(32px, 4.2vw, 62px)/1.15 var(--serif); }
+  .section-head p { max-width: 24em; margin: 0; color: var(--mute); }
+  .track-wrap { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .track-wrap.is-pinned { overflow: hidden; }
+  .track {
+    display: flex; align-items: center; gap: clamp(14px, 2vw, 28px);
+    width: max-content; height: min(66svh, 720px); padding-inline: var(--gutter);
+  }
+  .track .shot { flex: none; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; scroll-snap-align: center; }
+  .track .shot.short { height: 68%; }
+  .track .shot.mid { height: 84%; align-self: flex-start; }
+  .track img { height: 100%; width: auto; object-fit: cover; transition: filter .3s; }
+  .track .shot:hover img { filter: brightness(1.06); }
+
+  /* about */
+  .about {
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter);
+    padding: 64px var(--gutter) 40px; align-items: start;
+  }
+  .about figure { grid-column: 1 / 5; margin: 0; }
+  .about figure img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+  .about-copy { grid-column: 6 / 12; padding-top: 8vh; }
+  .about .big { margin: 0 0 1.1em; font: 400 clamp(22px, 2.4vw, 34px)/1.5 var(--serif); }
+  .about .big + p:not(.big) { max-width: 26em; color: var(--mute); }
+
+  /* work list */
+  .work { padding: 120px var(--gutter) 140px; }
+  .work .section-head { padding-inline: 0; }
+  .work-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  .work-list li {
+    display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 2fr) auto;
+    gap: 12px 28px; align-items: baseline; padding: 28px 0; border-bottom: 1px solid var(--rule);
+  }
+  .work-list h3 { margin: 0; font: 700 22px/1.4 var(--serif); }
+  .work-list p { margin: 0; color: var(--mute); }
+  .work-list .stack, .work-list time { font-size: 14px; color: var(--mute); }
+  .work-list time { font-variant-numeric: tabular-nums; }
+
+  /* contact */
+  .contact { background: var(--dark); color: var(--dark-ink); padding: 140px var(--gutter) 40px; color-scheme: dark; }
+  .contact h2 { margin: 0; font: 700 clamp(40px, 5vw, 76px)/1.15 var(--serif); }
+  .contact-grid {
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(40px, 6vw, 96px); align-items: start; margin-bottom: 120px;
+  }
+  .contact-intro p { max-width: 24em; margin: 28px 0 0; color: var(--dark-mute); }
+  .btn {
+    display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border: 0; cursor: pointer;
+    background: var(--dark-ink); color: var(--dark); font: 600 16px/1 var(--sans);
+    transition: background-color .2s;
+  }
+  .btn:hover { background: #fff; }
+  .btn:disabled { opacity: .6; cursor: progress; }
+
+  /* inquiry form */
+  .inquiry { display: grid; gap: 20px; }
+  .inquiry .row, .inquiry .group .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .inquiry .group { display: grid; gap: 20px; }
+  .kind { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; }
+  .kind legend { margin-bottom: 12px; padding: 0; font-weight: 600; }
+  .kind label {
+    position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+    box-shadow: inset 0 0 0 1px #5A4F4A; cursor: pointer; transition: background-color .2s, color .2s;
+  }
+  .kind input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+  .kind label:has(:checked) { background: var(--dark-ink); color: var(--dark); box-shadow: none; }
+  .kind label:has(:focus-visible) { outline: 2px solid var(--safe); outline-offset: 3px; }
+  .field { display: grid; gap: 8px; }
+  .field > span { font-size: 14px; color: var(--dark-mute); }
+  .field em { font-style: normal; opacity: .7; }
+  .field :is(input, select, textarea) {
+    width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #3F3531; border-radius: 0;
+    background: #0E0B0A; color: var(--dark-ink); font: 400 16px/1.5 var(--sans);
+  }
+  .field textarea { min-height: 150px; resize: vertical; }
+  .field :is(input, select, textarea):focus { border-color: var(--dark-ink); }
+  .field :is(input, textarea)::placeholder { color: #7A6D67; }
+  .field :is(input, select, textarea):user-invalid { border-color: #E06A55; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .consent { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+  .consent input { width: 20px; height: 20px; margin: 0; accent-color: var(--safe); }
+  .privacy { font-size: 14px; color: var(--dark-mute); }
+  .privacy summary { cursor: pointer; min-height: 32px; }
+  .privacy p { margin: 6px 0 0; max-width: 40em; }
+  .submit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 8px; }
+  .status { margin: 0; color: var(--dark-mute); }
+  .status.ok { color: var(--dark-ink); }
+  .status.err { color: #F08C78; }
+
+  /* lightbox */
+  html:has(.lightbox[open]) { overflow: hidden; }
+  .lightbox {
+    width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 64px 80px;
+    border: 0; background: rgba(14, 11, 10, .96); color: var(--dark-ink);
+  }
+  .lightbox[open] { display: grid; place-items: center; }
+  .lightbox::backdrop { background: transparent; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lightbox button {
+    position: absolute; min-width: 48px; min-height: 48px; border: 0; background: none; cursor: pointer;
+    color: inherit; font: 400 36px/1 var(--sans);
+  }
+  .lb-close { top: 12px; right: 16px; }
+  .lightbox .lb-close { font-size: 15px; font-weight: 500; }
+  .lb-prev { left: 12px; top: 50%; translate: 0 -50%; }
+  .lb-next { right: 12px; top: 50%; translate: 0 -50%; }
+  .foot { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; font-size: 14px; color: var(--dark-mute); }
+  .foot a { text-decoration: none; }
+  .foot a:hover { text-decoration: underline; }
+
+  /* light meter: page-progress gauge */
+  .meter {
+    position: fixed; right: 16px; top: 30vh; height: 40vh; width: 8px; z-index: 9;
+    mix-blend-mode: difference; opacity: .75; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, #fff 0 1px, transparent 1px 12.5%);
+  }
+  .meter::before { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 1px; background: #fff; }
+  .needle { position: absolute; left: -10px; top: 0; width: 20px; height: 2px; background: #fff; }
+
+  /* intro: invitation envelope. Hidden unless JS runs with motion allowed. */
+  .intro {
+    position: fixed; inset: 0; z-index: 20;
+    display: grid; place-items: center; align-content: center; gap: 32px;
+    padding-inline: 16px; background: #D9DAD4;
+  }
+  .envelope { position: relative; width: min(560px, 88vw); aspect-ratio: 16 / 10.5; perspective: 1400px; cursor: pointer; }
+  .envelope:focus-visible { outline: 2px solid var(--safe); outline-offset: 10px; }
+  .env-flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: translate .3s; }
+  .envelope:hover .env-flip { translate: 0 -4px; }
+  .env-front, .env-rear { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .env-rear { perspective: 1400px; }
+  .env-front {
+    display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto;
+    padding: 6% 7%; background: #EDEBE6; box-shadow: 0 30px 60px -30px rgba(23, 24, 26, .45);
+  }
+  .from { margin: 0; font-size: clamp(11px, 1.6vw, 13px); line-height: 1.6; color: var(--mute); }
+  .from span, .to span { display: block; margin-bottom: 2px; font: 400 clamp(10px, 1.4vw, 12px)/1.4 var(--sans); color: #8A8F92; }
+  .stamp {
+    width: clamp(42px, 8vw, 62px); aspect-ratio: 4 / 5; rotate: 4deg;
+    border: 4px solid #fff; outline: 1px dashed #C9C4BA; outline-offset: 2px;
+    background: url("https://images.unsplash.com/photo-1595662000432-f8cdba893fa4?w=200&h=250&fit=crop&q=70&auto=format") center / cover no-repeat padding-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+  }
+  .to {
+    grid-column: 1 / -1; align-self: center; justify-self: center; margin: 0; padding-bottom: 6px;
+    border-bottom: 1px solid #CFCAC0; font: 400 clamp(18px, 3.4vw, 28px)/1.3 var(--serif);
+  }
+  .about-line { grid-column: 1 / -1; margin: 0; text-align: center; font-size: clamp(11px, 1.6vw, 13px); color: var(--mute); }
+  .env-back, .env-pocket, .env-flap { position: absolute; inset: 0; }
+  .env-back { z-index: 1; background: #EDEBE6; box-shadow: 0 30px 60px -30px rgba(23, 24, 26, .45); }
+  .env-card {
+    position: absolute; left: 6%; right: 6%; top: 7%; height: 86%; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(6px, 1.4vw, 12px);
+    padding: 6%; text-align: center;
+    background: #FBFAF7; outline: 1px solid #E2DED6; outline-offset: -10px;
+    box-shadow: 0 12px 30px -18px rgba(23, 24, 26, .4);
+  }
+  .card-kicker { margin: 0; font-size: clamp(12px, 1.8vw, 14px); letter-spacing: .08em; color: var(--mute); }
+  .card-names { margin: 0; font: 700 clamp(20px, 3.6vw, 30px)/1.35 var(--serif); }
+  .card-names span { display: block; font: 400 clamp(13px, 1.8vw, 15px)/2 var(--sans); color: var(--mute); }
+  .card-note { margin: 0; font-size: clamp(12px, 1.7vw, 14px); color: var(--mute); }
+  .env-pocket { z-index: 3; background: #E6E3DD; clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%); }
+  .env-flap { z-index: 4; background: #DFDCD5; clip-path: polygon(0 0, 100% 0, 50% 60%); transform-origin: 50% 0; }
+  .intro-hint { margin: 0; font-size: 15px; color: var(--mute); }
+  .intro-skip {
+    position: absolute; right: var(--gutter); bottom: 20px; min-height: 44px; padding: 0 12px;
+    border: 0; background: none; cursor: pointer;
+    font: 500 14px/1 var(--sans); color: var(--mute); text-decoration: underline; text-underline-offset: 4px;
+  }
+
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: 1fr; padding-top: 72px; }
+    .hero-photo { grid-column: 1; grid-row: 1; height: 58svh; }
+    .hero-copy { grid-column: 1; grid-row: 2; padding: 28px 0 0; }
+    .develop-inner { grid-template-columns: 1fr; }
+    .develop-photo { max-height: 60svh; }
+    .track { height: 52svh; }
+    .about { grid-template-columns: 1fr; }
+    .about figure, .about-copy { grid-column: 1; }
+    .about-copy { padding-top: 32px; }
+    .work-list li { grid-template-columns: 1fr auto; }
+    .work-list h3 { grid-column: 1; grid-row: 1; }
+    .work-list time { grid-column: 2; grid-row: 1; }
+    .work-list p, .work-list .stack { grid-column: 1 / -1; }
+    .meter { display: none; }
+    .contact-grid, .inquiry .row, .inquiry .group .row { grid-template-columns: 1fr; }
+    .lightbox { padding: 64px 16px 80px; }
+    .lb-prev, .lb-next { top: auto; bottom: 12px; translate: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="intro" hidden>
+  <div class="envelope" role="button" tabindex="0" aria-label="초대장 열기">
+    <div class="env-flip">
+      <!-- address side: what you see first -->
+      <div class="env-front">
+        <p class="from"><span>보내는 사람</span>사진하는 연주<br>개발하는 연주</p>
+        <div class="stamp" aria-hidden="true"></div>
+        <p class="to"><span>받는 사람</span>이 페이지를 연 당신께</p>
+        <p class="about-line">웨딩 사진을 찍고, 웹을 만드는 연주의 포트폴리오</p>
+      </div>
+      <!-- flap side: revealed by the flip, then opened -->
+      <div class="env-rear">
+        <div class="env-back"></div>
+        <div class="env-card">
+          <p class="card-kicker">초대합니다</p>
+          <p class="card-names">사진하는 연주<span>그리고</span>개발하는 연주</p>
+          <p class="card-note">두 사람이 한 페이지에서 만납니다</p>
+        </div>
+        <div class="env-pocket"></div>
+        <div class="env-flap"></div>
+      </div>
+    </div>
+  </div>
+  <p class="intro-hint">봉투를 눌러 열어 주세요</p>
+  <button class="intro-skip" type="button">건너뛰기</button>
+</div>
+
+<nav class="nav" aria-label="주요 메뉴">
+  <a class="name" href="#top">연주</a>
+  <ul>
+    <li><a href="#photo">사진</a></li>
+    <li><a href="#work">개발</a></li>
+    <li><a href="#contact">연락</a></li>
+  </ul>
+</nav>
+
+<div class="meter" aria-hidden="true"><span class="needle"></span></div>
+
+<main id="top">
+  <header class="hero">
+    <figure class="hero-photo">
+      <img src="https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=2000&h=1500&fit=crop&q=80&auto=format"
+           width="2000" height="1500" alt="흑백으로 찍은 신랑과 신부" fetchpriority="high">
+    </figure>
+    <div class="hero-copy">
+      <h1><span class="line"><span>빛으로 기억하고,</span></span><span class="line"><span>코드로 남깁니다.</span></span></h1>
+      <p><span class="nw">웨딩 사진을 찍고,</span> <span class="nw">웹을 만드는 연주입니다.</span><br><span class="nw">두 일 모두 누군가의 하루를</span> <span class="nw">오래 꺼내 볼 수 있게</span> <span class="nw">만드는 일이라고 생각해요.</span></p>
+    </div>
+  </header>
+
+  <section class="develop" aria-labelledby="develop-title">
+    <div class="develop-inner">
+      <figure class="develop-photo">
+        <img src="https://images.unsplash.com/photo-1524650448000-02d0a2aeb6cb?w=1200&h=1500&fit=crop&q=80&auto=format"
+             width="1200" height="1500" alt="흑백 사진 속 신랑과 신부" loading="lazy">
+      </figure>
+      <div>
+        <h2 id="develop-title">현상하는 사람</h2>
+        <p class="lede">영어로 developer는 <span class="nw">현상액이면서 개발자예요.</span><br><span class="nw">필름은 약품 속에서</span> <span class="nw">천천히 상이 올라오고,</span> <span class="nw">코드는 한 줄씩 쌓이다</span> <span class="nw">어느 순간 화면이 됩니다.</span><br><span class="nw">저는 두 가지를 다 현상합니다.</span></p>
+<pre class="code"><code><span class="ln"><span class="tok-c">// 오늘 찍은 한 롤을 현상합니다</span></span>
+<span class="ln"><span class="tok-k">const</span> roll = {</span>
+<span class="ln">  film: <span class="tok-s">"HP5 Plus 400"</span>,</span>
+<span class="ln">  frames: <span class="tok-n">36</span>,</span>
+<span class="ln">  developer: <span class="tok-s">"ID-11 stock"</span>,</span>
+<span class="ln">  temp: <span class="tok-n">20</span>, <span class="tok-c">// °C</span></span>
+<span class="ln">  time: <span class="tok-s">"7:30"</span>,</span>
+<span class="ln">};</span>
+<span class="ln"> </span>
+<span class="ln"><span class="tok-k">await</span> develop(roll); <span class="tok-c">// 상이 올라오는 중</span></span></code></pre>
+        <div class="timer">
+          <div class="gauge" aria-hidden="true"><span></span></div>
+          <output aria-label="현상 시간">7:30</output>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery" id="photo" aria-labelledby="photo-title">
+    <div class="section-head">
+      <h2 id="photo-title">최근의 하루들</h2>
+      <p><span class="nw">연출보다 그날 실제로 있었던</span> <span class="nw">순간을 남깁니다.</span><br><span class="nw">손끝, 웃음, 걸음 같은 것들이요.</span></p>
+    </div>
+    <!-- TODO: 실제 촬영 사진으로 교체 (Unsplash 플레이스홀더) -->
+    <div class="track-wrap">
+      <div class="track">
+        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1573676048035-9c2a72b6a12a?w=1000&h=1333&fit=crop&q=80&auto=format" width="1000" height="1333" alt="흑백 사진 속 막 결혼한 두 사람" loading="lazy"></button>
+        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1504227986464-b07ae4f486f4?w=1500&h=1000&fit=crop&q=80&auto=format" width="1500" height="1000" alt="거리를 함께 걷는 두 사람" loading="lazy"></button>
+        <button class="shot mid" type="button"><img src="https://images.unsplash.com/photo-1539357521934-197bc014f047?w=1000&h=1500&fit=crop&q=80&auto=format" width="1000" height="1500" alt="기둥 옆에 선 신부" loading="lazy"></button>
+        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1615632413553-fdf70995ee98?w=1500&h=1125&fit=crop&q=80&auto=format" width="1500" height="1125" alt="검은 정장의 신랑과 흰 드레스의 신부" loading="lazy"></button>
+        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1521544213200-ee65f73b6238?w=1200&h=1200&fit=crop&q=80&auto=format" width="1200" height="1200" alt="서로의 손을 잡은 두 사람" loading="lazy"></button>
+        <button class="shot mid" type="button"><img src="https://images.unsplash.com/photo-1523263653976-003efe7f25cf?w=1000&h=1333&fit=crop&q=80&auto=format" width="1000" height="1333" alt="꽃다발을 든 신부" loading="lazy"></button>
+        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1617724975854-70b5d0cedb0a?w=1500&h=1000&fit=crop&q=80&auto=format" width="1500" height="1000" alt="해변을 걷는 신랑과 신부" loading="lazy"></button>
+        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1514451858099-83d802598681?w=1000&h=1250&fit=crop&q=80&auto=format" width="1000" height="1250" alt="꽃 사이에 선 신부" loading="lazy"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" aria-label="소개">
+    <figure>
+      <img src="https://images.unsplash.com/photo-1595662000432-f8cdba893fa4?w=1000&h=1250&fit=crop&q=80&auto=format" width="1000" height="1250" alt="반지를 낀 손, 흑백" loading="lazy">
+    </figure>
+    <div class="about-copy">
+      <p class="big"><span class="nw">사진을 찍으며 배운 건,</span><br><span class="nw">그날은 다시 오지 않는다는 것.</span></p>
+      <p class="big"><span class="nw">코드를 짜며 배운 건,</span><br><span class="nw">다시 꺼내 볼 수 있게</span> <span class="nw">만들 수는 있다는 것.</span></p>
+      <p><span class="nw">그래서 촬영이 끝나면</span> <span class="nw">사진을 넘기는 데서 멈추지 않고,</span> <span class="nw">두 사람이 오래 들여다볼 수 있는</span> <span class="nw">자리까지 직접 만듭니다.</span></p>
+    </div>
+  </section>
+
+  <section class="work" id="work" aria-labelledby="work-title">
+    <div class="section-head">
+      <h2 id="work-title">만든 것들</h2>
+      <p><span class="nw">사진 일을 하다 필요해서</span> <span class="nw">만든 도구부터</span> <span class="nw">의뢰받은 서비스까지.</span></p>
+    </div>
+    <!-- TODO: 실제 프로젝트로 교체 -->
+    <ul class="work-list">
+      <li>
+        <h3>웨딩 갤러리 전달 페이지</h3>
+        <p><span class="nw">두 사람에게 원본을 보내는</span> <span class="nw">비공개 갤러리.</span> <span class="nw">사진 고르기와 다운로드를</span> <span class="nw">한 화면에서.</span></p>
+        <span class="stack">Next.js, Supabase</span>
+        <time datetime="2025">2025</time>
+      </li>
+      <li>
+        <h3>촬영 일정 관리 도구</h3>
+        <p><span class="nw">문의부터 계약, 촬영일,</span> <span class="nw">보정 마감까지</span> <span class="nw">한곳에서 챙기는 내부 도구.</span></p>
+        <span class="stack">TypeScript, Postgres</span>
+        <time datetime="2025">2025</time>
+      </li>
+      <li>
+        <h3>문서 검색 파이프라인</h3>
+        <p><span class="nw">쌓인 노트와 문서를 읽고</span> <span class="nw">답하는 검색 시스템.</span> <span class="nw">리랭커로 답의 정확도를</span> <span class="nw">올렸습니다.</span></p>
+        <span class="stack">Python</span>
+        <time datetime="2026">2026</time>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<footer class="contact" id="contact">
+  <div class="contact-grid">
+    <div class="contact-intro">
+      <h2>당신의 하루를<br>오래 남길게요.</h2>
+      <p><span class="nw">촬영이든 개발이든</span> <span class="nw">편하게 적어 주세요.</span><br><span class="nw">이틀 안에 메일로 답드릴게요.</span></p>
+    </div>
+
+    <form class="inquiry">
+      <fieldset class="kind">
+        <legend>어떤 문의인가요?</legend>
+        <label><input type="radio" name="type" value="photo" checked>웨딩 촬영</label>
+        <label><input type="radio" name="type" value="dev">개발 의뢰</label>
+        <label><input type="radio" name="type" value="both">둘 다</label>
+      </fieldset>
+
+      <div class="row">
+        <label class="field"><span>이름</span><input name="name" required maxlength="50" autocomplete="name"></label>
+        <label class="field"><span>이메일</span><input name="email" type="email" required maxlength="100" autocomplete="email"></label>
+      </div>
+      <label class="field"><span>연락처 <em>(선택)</em></span><input name="phone" type="tel" maxlength="30" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></label>
+
+      <div class="group" data-for="photo">
+        <div class="row">
+          <label class="field"><span>예식일</span><input name="date" type="date"></label>
+          <label class="field"><span>예식 장소</span><input name="venue" maxlength="100" placeholder="예: 서울 성수, 가든홀"></label>
+        </div>
+        <label class="field"><span>촬영 범위</span>
+          <select name="scope">
+            <option value="">선택해 주세요</option>
+            <option>본식</option><option>야외 스냅</option><option>본식과 스냅 모두</option><option>아직 정하지 않았어요</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="group" data-for="dev" hidden>
+        <div class="row">
+          <label class="field"><span>만들고 싶은 것</span>
+            <select name="project" disabled>
+              <option value="">선택해 주세요</option>
+              <option>웹사이트</option><option>웹 서비스</option><option>업무 자동화</option><option>데이터·검색</option><option>기타</option>
+            </select>
+          </label>
+          <label class="field"><span>예산</span>
+            <select name="budget" disabled>
+              <option value="">선택해 주세요</option>
+              <option>300만 원 미만</option><option>300만~1,000만 원</option><option>1,000만 원 이상</option><option>상의가 필요해요</option>
+            </select>
+          </label>
+        </div>
+        <label class="field"><span>희망 일정</span><input name="timeline" maxlength="50" placeholder="예: 12월 오픈" disabled></label>
+      </div>
+
+      <label class="field"><span>문의 내용</span><textarea name="message" required maxlength="3000" rows="5" placeholder="원하는 분위기, 참고할 사이트, 궁금한 점을 자유롭게 적어 주세요."></textarea></label>
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <label class="consent"><input type="checkbox" name="consent" value="yes" required>개인정보 수집과 이용에 동의합니다.</label>
+      <details class="privacy">
+        <summary>어떤 정보를, 왜 받나요?</summary>
+        <!-- TODO: 보관 기간은 실제 운영 방침에 맞게 수정 -->
+        <p>이름, 이메일, 연락처(선택), 문의 내용과 선택한 항목을 받습니다. 문의에 답하고 견적을 안내하는 데만 쓰고, 답변을 마친 뒤 1년이 지나면 삭제합니다. 동의하지 않으면 문의를 보낼 수 없어요.</p>
+      </details>
+
+      <div class="submit-row">
+        <button class="btn" type="submit">문의 보내기</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+  <p class="foot">
+    <span>© 2026 연주</span>
+    <a href="https://github.com/">GitHub</a>
+    <a href="https://instagram.com/">Instagram</a>
+  </p>
+</footer>
+
+<dialog class="lightbox" aria-label="사진 크게 보기">
+  <img alt="">
+  <button class="lb-close" type="button">닫기</button>
+  <button class="lb-prev" type="button" aria-label="이전 사진">‹</button>
+  <button class="lb-next" type="button" aria-label="다음 사진">›</button>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+  const mm = gsap.matchMedia();
+
+  // Intro: an invitation envelope. Opens on seal/envelope click, wheel, swipe or Enter/Space/↓.
+  // When it's gone, the hero plays its one load moment: the photo develops, the headline rises.
+  mm.add("(prefers-reduced-motion: no-preference)", () => {
+    const hero = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } })
+      .fromTo(".hero-photo img",
+        { filter: "brightness(2.4) contrast(0.35)", scale: 1.06 },
+        { filter: "brightness(1) contrast(1)", scale: 1, duration: 2.2, ease: "power2.out" })
+      .from(".hero h1 .line > span", { yPercent: 110, duration: 1.1, stagger: 0.12 }, 0.5)
+      .from(".hero p", { opacity: 0, y: 12, duration: 0.8 }, 1.1);
+
+    const root = document.documentElement;
+    const intro = document.querySelector(".intro");
+    const envelope = intro.querySelector(".envelope");
+    const front = intro.querySelector(".env-front");
+    const skipBtn = intro.querySelector(".intro-skip");
+    let tl = null, done = false;
+
+    intro.hidden = false;
+    root.style.overflow = "hidden";
+    gsap.set(".env-rear", { rotateY: 180 }); // set here, not in CSS, so it can be zeroed cleanly later
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      removeListeners();
+      intro.hidden = true;
+      root.style.overflow = "";
+      ScrollTrigger.refresh();
+      hero.play();
+    };
+    const open = () => {
+      if (tl) return;
+      tl = gsap.timeline({ onComplete: finish })
+        .to(".intro-hint", { autoAlpha: 0, duration: 0.3 }, 0)
+        // flip left-right from the address side to the flap side, lifting a little mid-turn
+        .to(".env-flip", { rotateY: 180, duration: 1, ease: "power2.inOut" }, 0)
+        .to(envelope, { scale: 1.05, duration: 0.5, ease: "sine.out", yoyo: true, repeat: 1 }, 0)
+        // flatten: identical picture, but no 3D context left under the z-index choreography below
+        .add(() => {
+          gsap.set(".env-flip", { rotateY: 0, transformStyle: "flat" });
+          gsap.set(".env-rear", { rotateY: 0 });
+          front.hidden = true;
+        })
+        .to(".env-flap", { rotateX: 180, duration: 0.6, ease: "power2.inOut" }, "+=0.1")
+        .set(".env-flap", { zIndex: 1 }, "-=0.3") // tucks behind the card once past vertical
+        .to(".env-card", { yPercent: -108, duration: 0.9, ease: "power2.inOut" })
+        .to(envelope, { y: "18vh", duration: 0.9, ease: "power2.inOut" }, "<") // keeps the rising card on screen
+        .set(".env-card", { zIndex: 5 })
+        .to([".env-back", ".env-pocket", ".env-flap"], { y: "65vh", autoAlpha: 0, duration: 0.8, ease: "power2.in" })
+        .to(".env-card", { yPercent: 0, scale: 1.08, duration: 0.8, ease: "power3.out" }, "<")
+        .to(envelope, { y: 0, duration: 0.8, ease: "power3.out" }, "<")
+        .to(intro, { autoAlpha: 0, duration: 0.7, ease: "power1.inOut" }, "+=1");
+    };
+    const skip = () => { if (tl) tl.kill(); finish(); };
+    const onKey = e => {
+      if (e.key === "Escape") return skip();
+      if (e.target === skipBtn) return;
+      if (["Enter", " ", "ArrowDown", "PageDown"].includes(e.key)) { e.preventDefault(); open(); }
+    };
+
+    envelope.addEventListener("click", open);
+    intro.addEventListener("wheel", open, { passive: true });
+    intro.addEventListener("touchmove", open, { passive: true });
+    skipBtn.addEventListener("click", skip);
+    window.addEventListener("keydown", onKey);
+    function removeListeners() {
+      envelope.removeEventListener("click", open);
+      intro.removeEventListener("wheel", open);
+      intro.removeEventListener("touchmove", open);
+      skipBtn.removeEventListener("click", skip);
+      window.removeEventListener("keydown", onKey);
+    }
+    return () => { removeListeners(); intro.hidden = true; root.style.overflow = ""; };
+  });
+
+  // Wheel-down moments, desktop only. Mobile and reduced motion get the finished state.
+  mm.add("(prefers-reduced-motion: no-preference) and (min-width: 801px)", () => {
+    const lines = gsap.utils.toArray(".code .ln");
+    const out = document.querySelector(".timer output");
+    const clock = { t: 0 };
+    const TOTAL = 450; // 7:30, matches roll.time
+
+    gsap.timeline({
+      scrollTrigger: { trigger: ".develop", start: "top top", end: "+=180%", pin: true, scrub: 0.6 }
+    })
+      .fromTo(".develop-photo img",
+        { filter: "brightness(2.8) contrast(0.2)", opacity: 0.12 },
+        { filter: "brightness(1) contrast(1.05)", opacity: 1, ease: "none", duration: 1 }, 0)
+      .fromTo(lines, { opacity: 0, x: -8 },
+        { opacity: 1, x: 0, duration: 0.1, ease: "none", stagger: 0.85 / lines.length }, 0)
+      .fromTo(".gauge span", { scaleX: 0 }, { scaleX: 1, ease: "none", duration: 1 }, 0)
+      .fromTo(clock, { t: 0 }, {
+        t: TOTAL, ease: "none", duration: 1,
+        onUpdate: () => {
+          const s = Math.round(clock.t);
+          out.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+        }
+      }, 0);
+
+    const wrap = document.querySelector(".track-wrap");
+    const track = document.querySelector(".track");
+    const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+    wrap.classList.add("is-pinned");
+    gsap.to(track, {
+      x: () => -distance(),
+      ease: "none", // required for 1:1 scroll-to-position mapping
+      scrollTrigger: {
+        trigger: ".gallery", pin: true, start: "top top",
+        end: () => "+=" + distance(), scrub: 0.5, invalidateOnRefresh: true
+      }
+    });
+    return () => wrap.classList.remove("is-pinned");
+  });
+
+  // Light meter needle tracks page progress. Created last so it measures after pin spacers exist.
+  mm.add("(prefers-reduced-motion: no-preference) and (min-width: 801px)", () => {
+    const meter = document.querySelector(".meter");
+    gsap.to(".needle", {
+      y: () => meter.clientHeight - 2, ease: "none",
+      scrollTrigger: { start: 0, end: "max", scrub: 0.4, invalidateOnRefresh: true }
+    });
+  });
+
+  // Gallery lightbox on native <dialog>: Esc closes, ←/→ step through.
+  const shots = [...document.querySelectorAll(".track .shot")];
+  const lb = document.querySelector(".lightbox");
+  const lbImg = lb.querySelector("img");
+  let current = 0;
+  const show = i => {
+    current = (i + shots.length) % shots.length;
+    const img = shots[current].querySelector("img");
+    lbImg.src = img.src.replace(/w=\d+&h=\d+&fit=crop/, "w=2000"); // uncropped, larger
+    lbImg.alt = img.alt;
+  };
+  shots.forEach((s, i) => s.addEventListener("click", () => { show(i); lb.showModal(); }));
+  lb.querySelector(".lb-prev").addEventListener("click", () => show(current - 1));
+  lb.querySelector(".lb-next").addEventListener("click", () => show(current + 1));
+  lb.querySelector(".lb-close").addEventListener("click", () => lb.close());
+  lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
+  lb.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") show(current - 1);
+    if (e.key === "ArrowRight") show(current + 1);
+  });
+
+  // Inquiry form: posts to a Google Apps Script web app, which mails the site owner's Gmail.
+  // Paste the deployed web app URL here (see apps-script/README.md).
+  const FORM_ENDPOINT = "";
+  const form = document.querySelector(".inquiry");
+  const status = form.querySelector(".status");
+  const syncGroups = () => {
+    const type = form.elements.type.value;
+    form.querySelectorAll(".group").forEach(g => {
+      const on = type === "both" || g.dataset.for === type;
+      g.hidden = !on;
+      g.querySelectorAll("input, select").forEach(el => { el.disabled = !on; }); // hidden fields aren't sent
+    });
+  };
+  form.addEventListener("change", e => { if (e.target.name === "type") syncGroups(); });
+  syncGroups();
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  form.elements.date.min = today;
+
+  const say = (text, kind = "") => { status.textContent = text; status.className = "status " + kind; };
+  form.addEventListener("submit", async e => {
+    e.preventDefault(); // native validation has already passed when submit fires
+    if (!FORM_ENDPOINT) return say("아직 폼이 연결되지 않았어요. apps-script/README.md대로 주소를 넣으면 동작해요.", "err");
+    const button = form.querySelector("[type=submit]");
+    button.disabled = true;
+    say("보내는 중이에요…");
+    try {
+      const res = await fetch(FORM_ENDPOINT, { method: "POST", body: new URLSearchParams(new FormData(form)) });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      form.reset();
+      syncGroups();
+      say("잘 받았어요. 이틀 안에 메일로 답드릴게요.", "ok");
+    } catch {
+      say("보내지 못했어요. 인터넷 연결을 확인하고 다시 보내 주세요.", "err");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  window.addEventListener("load", () => ScrollTrigger.refresh());
+</script>
+</body>
+</html>
