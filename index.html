@@ -40,22 +40,17 @@
   .nw { white-space: nowrap; }
   :focus-visible { outline: 2px solid var(--safe); outline-offset: 3px; }
 
-  /* nav: difference blend keeps it legible over paper, photos and darkroom */
+  /* nav: difference blend keeps it legible over paper, photos and darkroom.
+     No pane behind it — a frosted one needs backdrop-filter, which isolates the
+     label from the page and turns the blend to mush over the light sections. */
   .nav {
-    position: fixed; z-index: 22;
-    top: 14px; left: 50%; translate: -50% 0;
-    width: min(1080px, calc(100% - 2 * var(--gutter)));
-    padding: 12px clamp(16px, 2.4vw, 26px);
-    border-radius: 999px; /* liquidGL inherits this for the pane */
+    position: fixed; inset: 0 0 auto 0; z-index: 22;
+    padding: 18px var(--gutter);
   }
-  /* z-index 3 lifts the label off the lens; difference keeps it legible on paper, photo and darkroom */
   .nav-inner {
-    position: relative; z-index: 3;
     display: flex; justify-content: space-between; align-items: center;
     color: #fff; mix-blend-mode: difference;
   }
-  /* no WebGL: a frosted pane instead of a refracting one */
-  .nav.is-frost { background: rgba(228, 229, 224, .42); backdrop-filter: blur(14px) saturate(1.15); }
   .nav a { text-decoration: none; font-weight: 500; }
   .nav .name { font: 700 20px/1 var(--serif); }
   .nav ul { display: flex; gap: clamp(16px, 3vw, 36px); list-style: none; margin: 0; padding: 0; }
@@ -402,7 +397,7 @@
   .intro {
     position: fixed; inset: 0; z-index: 60;
     display: grid; place-items: center; align-content: center; gap: 32px;
-    padding-inline: 16px; background: #D9DAD4;
+    padding-inline: 16px; background: #EDEDEA;
   }
   .envelope { position: relative; width: min(560px, 88vw); aspect-ratio: 16 / 10.5; perspective: 1400px; cursor: pointer; }
   .envelope:focus-visible { outline: 2px solid var(--safe); outline-offset: 10px; }
@@ -412,29 +407,29 @@
   .env-rear { perspective: 1400px; }
   .env-front {
     display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto;
-    padding: 6% 7%; background: #EDEBE6; box-shadow: 0 30px 60px -30px rgba(23, 24, 26, .45);
+    padding: 6% 7%; background: #FBFBF9; box-shadow: 0 26px 52px -28px rgba(23, 24, 26, .32);
   }
   .from { margin: 0; font-size: clamp(11px, 1.6vw, 13px); line-height: 1.6; color: var(--mute); }
   .from span, .to span { display: block; margin-bottom: 2px; font: 400 clamp(10px, 1.4vw, 12px)/1.4 var(--sans); color: #8A8F92; }
   .stamp {
     width: clamp(42px, 8vw, 62px); aspect-ratio: 4 / 5; rotate: 4deg;
-    border: 4px solid #fff; outline: 1px dashed #C9C4BA; outline-offset: 2px;
+    border: 4px solid #FEFEFD; outline: 1px dashed #D8D4CB; outline-offset: 2px;
     background: url("https://images.unsplash.com/photo-1595662000432-f8cdba893fa4?w=200&h=250&fit=crop&q=70&auto=format") center / cover no-repeat padding-box;
     box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
   }
   .to {
     grid-column: 1 / -1; align-self: center; justify-self: center; margin: 0; padding-bottom: 6px;
-    border-bottom: 1px solid #CFCAC0; font: 400 clamp(18px, 3.4vw, 28px)/1.3 var(--serif);
+    border-bottom: 1px solid #DCD8D0; font: 400 clamp(18px, 3.4vw, 28px)/1.3 var(--serif);
   }
   .about-line { grid-column: 1 / -1; margin: 0; text-align: center; font-size: clamp(11px, 1.6vw, 13px); color: var(--mute); }
   .env-back, .env-pocket, .env-flap { position: absolute; inset: 0; }
-  .env-back { z-index: 1; background: #EDEBE6; box-shadow: 0 30px 60px -30px rgba(23, 24, 26, .45); }
+  .env-back { z-index: 1; background: #FBFBF9; box-shadow: 0 26px 52px -28px rgba(23, 24, 26, .32); }
   .env-card {
     position: absolute; left: 6%; right: 6%; top: 7%; height: 86%; z-index: 2;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(6px, 1.4vw, 12px);
     padding: 6%; text-align: center;
-    background: #FBFAF7; outline: 1px solid #E2DED6; outline-offset: -10px;
-    box-shadow: 0 12px 30px -18px rgba(23, 24, 26, .4);
+    background: #FDFDFC; outline: 1px solid #EAE8E2; outline-offset: -10px;
+    box-shadow: 0 12px 28px -18px rgba(23, 24, 26, .3);
   }
   .card-logo {
     position: relative; width: min(62%, 300px); aspect-ratio: 5 / 2;
@@ -448,8 +443,8 @@
   .card-names { margin: 0; font: 700 clamp(20px, 3.6vw, 30px)/1.35 var(--serif); }
   .card-names span { display: block; font: 400 clamp(13px, 1.8vw, 15px)/2 var(--sans); color: var(--mute); }
   .card-note { margin: 0; font-size: clamp(12px, 1.7vw, 14px); color: var(--mute); }
-  .env-pocket { z-index: 3; background: #E6E3DD; clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%); }
-  .env-flap { z-index: 4; background: #DFDCD5; clip-path: polygon(0 0, 100% 0, 50% 60%); transform-origin: 50% 0; }
+  .env-pocket { z-index: 3; background: #F2F1ED; clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%); }
+  .env-flap { z-index: 4; background: #EAE9E4; clip-path: polygon(0 0, 100% 0, 50% 60%); transform-origin: 50% 0; }
   .intro-hint { margin: 0; font-size: 15px; color: var(--mute); }
   .intro-skip {
     position: absolute; right: var(--gutter); bottom: 20px; min-height: 44px; padding: 0 12px;
@@ -851,7 +846,12 @@
 
   // Intro: an invitation envelope. Opens on seal/envelope click, wheel, swipe or Enter/Space/↓.
   // When it's gone, the hero plays its one load moment: the photo develops, the headline rises.
-  mm.add("(prefers-reduced-motion: no-preference)", () => {
+  //
+  // This deliberately sits outside gsap.matchMedia. A matchMedia context is
+  // reverted on resize, which tore the envelope's listeners off while the
+  // overlay stayed on screen — resizing the window, or rotating a phone, locked
+  // the visitor out of the page behind an envelope that no longer opened.
+  if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     const hero = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } })
       .fromTo(".hero-photo img",
         { filter: "brightness(2.4) contrast(0.35)", scale: 1.06 },
@@ -922,8 +922,7 @@
       skipBtn.removeEventListener("click", skip);
       window.removeEventListener("keydown", onKey);
     }
-    return () => { removeListeners(); intro.hidden = true; root.style.overflow = ""; };
-  });
+  }
 
   // Wheel-down moments, desktop only. Mobile and reduced motion get the finished state.
   mm.add("(prefers-reduced-motion: no-preference) and (min-width: 801px)", () => {
@@ -1128,7 +1127,6 @@
   a machine without WebGL keeps the flat design and gets a frosted CSS pane.
 -->
 <script type="module">
-  const nav = document.querySelector(".nav");
   const namecard = document.querySelector(".namecard");
   const logoHost = document.querySelector(".card-logo");
 
@@ -1142,7 +1140,6 @@
   const motion = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
 
   if (!(hasWebGL && wide && motion)) {
-    nav.classList.add("is-frost");
     namecard.classList.add("is-frost");
   } else {
     const SHADERS = "https://cdn.jsdelivr.net/npm/@paper-design/shaders@0.0.80/+esm";
@@ -1230,16 +1227,12 @@
     const mountGlass = async () => {
       const { default: liquidGL } = await import(LIQUIDGL);
 
-      // Both calls share one renderer and one canvas, so both targets must sit
-      // at the same z-index (22 in the stylesheet).
-      const navLens = liquidGL({
-        target: ".nav", snapshot: "body", resolution: 1.6, engine: "webgl2",
-        refraction: 0.018, bevelDepth: 0.08, bevelWidth: 0.22,
-        frost: 3.4, shadow: false, specular: false, reveal: "none",
-      });
-
+      // One lens, and the snapshot covers only the band it sits in. Snapshotting
+      // the whole document put a 1519 x 16384 texture through the sampler every
+      // frame on this 13,000px page, which dropped it to about one frame per
+      // second. One section is roughly a twentieth of that.
       liquidGL({
-        target: ".namecard", snapshot: "body", resolution: 1.6, engine: "webgl2",
+        target: ".namecard", snapshot: ".card-stage", resolution: 1.2, engine: "webgl2",
         refraction: 0.02, aberration: 0.04, bevelDepth: 0.11, bevelWidth: 0.14,
         frost: 2.2, shadow: true, specular: true, reveal: "none",
         on: { init: lens => { parkLens(lens); buildCardTimeline(lens); } },
@@ -1259,16 +1252,9 @@
         };
         ScrollTrigger.addEventListener("refresh", recapture);
         window.addEventListener("load", recapture);
-        document.querySelectorAll("img").forEach(img => {
-          if (!img.complete) img.addEventListener("load", recapture, { once: true });
-        });
+        document.querySelector(".card-stage-bg")
+          .addEventListener("load", recapture, { once: true });
       }
-
-      // The pane thickens once the hero is behind you.
-      gsap.to(navLens.options, {
-        refraction: 0.05, frost: 5.2, bevelDepth: 0.15, ease: "none",
-        scrollTrigger: { start: 0, end: () => window.innerHeight * 0.9, scrub: 0.5, invalidateOnRefresh: true },
-      });
     };
 
     // ponytail: liquidGL has no per-lens on/off switch, and a lens that is
@@ -1305,7 +1291,6 @@
 
     mountGlass().catch(err => {
       console.warn("liquid glass skipped:", err);
-      nav.classList.add("is-frost");
       namecard.classList.add("is-frost");
     });
   }
