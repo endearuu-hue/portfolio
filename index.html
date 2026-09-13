@@ -837,6 +837,18 @@
   gsap.registerPlugin(ScrollTrigger);
   const mm = gsap.matchMedia();
 
+  // A reload keeps the old scroll position, which drops you inside a pinned
+  // section with the hero already gone — and the intro, which assumes the top
+  // of the page, then hands you the wrong screen. Always start at the top.
+  // GSAP puts scrollRestoration back to "auto" during its own load handling, so
+  // the flag is set again on load and the position is forced twice: once when
+  // load fires and once on the next frame, after the browser has restored.
+  const startAtTop = () => {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+  startAtTop();
+
   // Intro: an invitation envelope. Opens on seal/envelope click, wheel, swipe or Enter/Space/↓.
   // When it's gone, the hero plays its one load moment: the photo develops, the headline rises.
   mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -854,6 +866,7 @@
     const skipBtn = intro.querySelector(".intro-skip");
     let tl = null, done = false;
 
+    window.scrollTo(0, 0); // the envelope opens onto the hero, never mid-page
     intro.hidden = false;
     root.style.overflow = "hidden";
     gsap.set(".env-rear", { rotateY: 180 }); // set here, not in CSS, so it can be zeroed cleanly later
@@ -1100,7 +1113,11 @@
       .to(".cam-blind", { opacity: 0, duration: 0.3, ease: "power1.out" });
   });
 
-  window.addEventListener("load", () => ScrollTrigger.refresh());
+  window.addEventListener("load", () => {
+    startAtTop();
+    requestAnimationFrame(startAtTop);
+    ScrollTrigger.refresh();
+  });
 </script>
 
 <!--
