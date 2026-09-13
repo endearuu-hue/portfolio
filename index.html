@@ -111,17 +111,42 @@
   }
   .section-head h2 { margin: 0; font: 700 clamp(32px, 4.2vw, 62px)/1.15 var(--serif); }
   .section-head p { max-width: 24em; margin: 0; color: var(--mute); }
-  .track-wrap { overflow-x: auto; scroll-snap-type: x mandatory; }
-  .track-wrap.is-pinned { overflow: hidden; }
-  .track {
-    display: flex; align-items: center; gap: clamp(14px, 2vw, 28px);
-    width: max-content; height: min(66svh, 720px); padding-inline: var(--gutter);
+  /* the halls, and one contact sheet per hall */
+  .venues { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-inline: var(--gutter); }
+  .venue-chip {
+    min-height: 40px; padding: 0 15px; cursor: pointer;
+    border: 1px solid var(--rule); background: none;
+    font: 500 13px/1 var(--sans); color: var(--mute);
+    transition: background-color .16s ease-out, color .16s ease-out, border-color .16s ease-out;
   }
-  .track .shot { flex: none; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; scroll-snap-align: center; }
-  .track .shot.short { height: 68%; }
-  .track .shot.mid { height: 84%; align-self: flex-start; }
-  .track img { height: 100%; width: auto; object-fit: cover; transition: filter .3s; }
-  .track .shot:hover img { filter: brightness(1.06); }
+  .venue-chip[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .sheet-head {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; padding-inline: var(--gutter);
+    font-size: 13px; letter-spacing: .06em; color: var(--mute);
+  }
+  .sheet-head b { font: 700 15px/1 var(--serif); letter-spacing: .04em; color: var(--ink); }
+  .sheet-wrap { padding-inline: var(--gutter); }
+  .sheet {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: clamp(10px, 1.4vw, 18px); padding: clamp(14px, 2vw, 22px);
+    background: #141416; /* the black paper a contact sheet is printed on */
+  }
+  .sheet .shot {
+    position: relative; aspect-ratio: 4 / 5; overflow: hidden;
+    padding: 0; border: 0; background: #0E0F10; cursor: zoom-in;
+  }
+  .sheet .shot img {
+    width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.04);
+    transition: filter .3s ease-out, transform 480ms cubic-bezier(.16, 1, .3, 1);
+  }
+  .sheet .shot:hover img, .sheet .shot:focus-visible img {
+    filter: grayscale(1) contrast(1.04) brightness(1.14); transform: scale(1.03);
+  }
+  .shot-no {
+    position: absolute; left: 7px; bottom: 6px;
+    font: 600 10px/1 var(--sans); letter-spacing: .14em; color: rgba(255, 255, 255, .7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+  }
 
   /* about: two workbenches */
   .about { padding: 120px var(--gutter) 40px; }
@@ -332,12 +357,13 @@
   /* lightbox */
   html:has(.lightbox[open]) { overflow: hidden; }
   .lightbox {
-    width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 64px 80px;
+    width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0;
+    padding: 64px 80px 78px; /* the bottom strip belongs to the caption */
     border: 0; background: rgba(14, 11, 10, .96); color: var(--dark-ink);
   }
   .lightbox[open] { display: grid; place-items: center; }
   .lightbox::backdrop { background: transparent; }
-  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; filter: grayscale(1) contrast(1.03); }
   .lightbox button {
     position: absolute; min-width: 48px; min-height: 48px; border: 0; background: none; cursor: pointer;
     color: inherit; font: 400 36px/1 var(--sans);
@@ -346,6 +372,12 @@
   .lightbox .lb-close { font-size: 15px; font-weight: 500; }
   .lb-prev { left: 12px; top: 50%; translate: 0 -50%; }
   .lb-next { right: 12px; top: 50%; translate: 0 -50%; }
+  .lb-cap {
+    position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; padding-inline: 64px;
+    text-align: center; font-size: 13px; letter-spacing: .03em; color: var(--dark-mute);
+  }
+  .lb-cap b { margin-right: 10px; font-weight: 500; color: var(--dark-ink); }
+  .lb-cap i { font-style: normal; font-variant-numeric: tabular-nums; }
   .foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; margin: 0; font-size: 14px; color: var(--dark-mute); }
   .foot a { text-decoration: none; }
   .foot a:hover { text-decoration: underline; }
@@ -458,7 +490,7 @@
     .hero-copy { grid-column: 1; grid-row: 2; padding: 28px 0 0; }
     .develop-inner { grid-template-columns: 1fr; }
     .develop-photo { max-height: 60svh; }
-    .track { height: 52svh; }
+    .sheet { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
     .about { padding-top: 96px; }
     .about-head { margin-bottom: 48px; }
     .bench, .bench-dev { grid-template-columns: 1fr; }
@@ -468,7 +500,7 @@
     .lap-screen { aspect-ratio: 5 / 4; } /* a wide screen at phone width hides the last bullet */
     .meter { display: none; }
     .inquiry .row, .inquiry .group .row { grid-template-columns: 1fr; }
-    .lightbox { padding: 64px 16px 80px; }
+    .lightbox { padding: 64px 16px 104px; }
     .lb-prev, .lb-next { top: auto; bottom: 12px; translate: none; }
   }
 </style>
@@ -560,18 +592,11 @@
       <h2 id="photo-title">최근의 하루들</h2>
       <p><span class="nw">연출보다 그날 실제로 있었던</span> <span class="nw">순간을 남깁니다.</span><br><span class="nw">손끝, 웃음, 걸음 같은 것들이요.</span></p>
     </div>
-    <!-- TODO: 실제 촬영 사진으로 교체 (Unsplash 플레이스홀더) -->
-    <div class="track-wrap">
-      <div class="track">
-        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1573676048035-9c2a72b6a12a?w=1000&h=1333&fit=crop&q=80&auto=format" width="1000" height="1333" alt="흑백 사진 속 막 결혼한 두 사람" loading="lazy"></button>
-        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1504227986464-b07ae4f486f4?w=1500&h=1000&fit=crop&q=80&auto=format" width="1500" height="1000" alt="거리를 함께 걷는 두 사람" loading="lazy"></button>
-        <button class="shot mid" type="button"><img src="https://images.unsplash.com/photo-1539357521934-197bc014f047?w=1000&h=1500&fit=crop&q=80&auto=format" width="1000" height="1500" alt="기둥 옆에 선 신부" loading="lazy"></button>
-        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1615632413553-fdf70995ee98?w=1500&h=1125&fit=crop&q=80&auto=format" width="1500" height="1125" alt="검은 정장의 신랑과 흰 드레스의 신부" loading="lazy"></button>
-        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1521544213200-ee65f73b6238?w=1200&h=1200&fit=crop&q=80&auto=format" width="1200" height="1200" alt="서로의 손을 잡은 두 사람" loading="lazy"></button>
-        <button class="shot mid" type="button"><img src="https://images.unsplash.com/photo-1523263653976-003efe7f25cf?w=1000&h=1333&fit=crop&q=80&auto=format" width="1000" height="1333" alt="꽃다발을 든 신부" loading="lazy"></button>
-        <button class="shot" type="button"><img src="https://images.unsplash.com/photo-1617724975854-70b5d0cedb0a?w=1500&h=1000&fit=crop&q=80&auto=format" width="1500" height="1000" alt="해변을 걷는 신랑과 신부" loading="lazy"></button>
-        <button class="shot short" type="button"><img src="https://images.unsplash.com/photo-1514451858099-83d802598681?w=1000&h=1250&fit=crop&q=80&auto=format" width="1000" height="1250" alt="꽃 사이에 선 신부" loading="lazy"></button>
-      </div>
+    <!-- Filled from the VENUES list in the script below. Nothing to edit here. -->
+    <div class="venues" role="tablist" aria-label="웨딩홀"></div>
+    <p class="sheet-head"><b></b><span></span></p>
+    <div class="sheet-wrap">
+      <div class="sheet" role="tabpanel"></div>
     </div>
   </section>
 
@@ -821,6 +846,7 @@
 
 <dialog class="lightbox" aria-label="사진 크게 보기">
   <img alt="">
+  <p class="lb-cap"><b></b><i></i></p>
   <button class="lb-close" type="button">닫기</button>
   <button class="lb-prev" type="button" aria-label="이전 사진">‹</button>
   <button class="lb-next" type="button" aria-label="다음 사진">›</button>
@@ -831,6 +857,55 @@
 <script>
   gsap.registerPlugin(ScrollTrigger);
   const mm = gsap.matchMedia();
+
+  /* ------------------------------------------------------------------
+   * The photographs. This list is the only place they are written down:
+   * the contact sheet, the lightbox and the camera on the work section
+   * all read from it. To add a hall, add an entry. To add a frame, add
+   * a line. `id` is an Unsplash photo id for now — point `u()` at your
+   * own files and nothing else has to change.
+   * ---------------------------------------------------------------- */
+  const u = (id, w, h) => `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&q=80&auto=format`;
+  const frame = (id, alt, cap) => ({ thumb: u(id, 800, 1000), full: u(id, 1800, 2250), alt, cap });
+
+  const VENUES = [
+    {
+      slug: "grand-hall", name: "그랜드 홀", frames: [
+        frame("photo-1573676048035-9c2a72b6a12a", "예식 직후 마주 본 두 사람", "예식 직후, 마주 본 삼 초 · 35mm"),
+        frame("photo-1519741497674-611481863552", "손을 맞잡은 신랑과 신부", "반지를 끼우던 손 · 85mm"),
+        frame("photo-1523438885200-e635ba2c371e", "하객 사이를 걷는 신부", "입장, 아버지의 걸음에 맞춰 · 50mm"),
+        frame("photo-1465495976277-4387d4b0b4c6", "축하를 받는 두 사람", "꽃가루가 내리던 순간 · 35mm"),
+        frame("photo-1511285560929-80b456fea0bc", "식장을 나서는 두 사람", "문을 나서며 · 50mm"),
+        frame("photo-1522673607200-164d1b6ce486", "테이블 위 부케", "남겨진 부케 · 85mm"),
+      ],
+    },
+    {
+      slug: "seaside", name: "바닷가 채플", frames: [
+        frame("photo-1617724975854-70b5d0cedb0a", "해변을 걷는 신랑과 신부", "해가 낮아진 바닷가에서 · 35mm"),
+        frame("photo-1504227986464-b07ae4f486f4", "거리를 함께 걷는 두 사람", "식장을 나와 걷던 길 · 50mm"),
+        frame("photo-1583939003579-730e3918a45a", "바람에 날리는 베일", "바람이 베일을 들던 순간 · 85mm"),
+        frame("photo-1519225421980-715cb0215aed", "노을 앞에 선 두 사람", "마지막 빛 · 35mm"),
+        frame("photo-1465495976277-4387d4b0b4c6", "서로를 바라보는 두 사람", "돌아보던 얼굴 · 85mm"),
+      ],
+    },
+    {
+      slug: "garden", name: "가든 웨딩", frames: [
+        frame("photo-1523263653976-003efe7f25cf", "꽃다발을 든 신부", "부케를 다시 쥐던 손 · 85mm"),
+        frame("photo-1514451858099-83d802598681", "꽃 사이에 선 신부", "꽃 사이에서 · 50mm"),
+        frame("photo-1521544213200-ee65f73b6238", "서로의 손을 잡은 두 사람", "맞잡은 손 · 85mm"),
+        frame("photo-1520854221256-17451cc331bf", "잔디밭 위 예식", "잔디 위의 서약 · 35mm"),
+        frame("photo-1469371670807-013ccf25f16a", "웃음이 터진 신부", "웃음이 터지던 찰나 · 85mm"),
+      ],
+    },
+    {
+      slug: "chapel", name: "채플 예식", frames: [
+        frame("photo-1539357521934-197bc014f047", "기둥 옆에 선 신부", "기둥 곁, 입장을 기다리며 · 50mm"),
+        frame("photo-1615632413553-fdf70995ee98", "검은 정장의 신랑과 흰 드레스의 신부", "제단 앞에서 · 35mm"),
+        frame("photo-1544078751-58fee2d8a03b", "성당 안의 두 사람", "창으로 든 빛 · 50mm"),
+        frame("photo-1507504031003-b417219a0fde", "촛불이 놓인 예식장", "불을 밝히고 · 85mm"),
+      ],
+    },
+  ];
 
   // A reload keeps the old scroll position, which drops you inside a pinned
   // section with the hero already gone — and the intro, which assumes the top
@@ -950,18 +1025,6 @@
         }
       }, 0);
 
-    const wrap = document.querySelector(".track-wrap");
-    const track = document.querySelector(".track");
-    const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
-    wrap.classList.add("is-pinned");
-    gsap.to(track, {
-      x: () => -distance(),
-      ease: "none", // required for 1:1 scroll-to-position mapping
-      scrollTrigger: {
-        trigger: ".gallery", pin: true, start: "top top",
-        end: () => "+=" + distance(), scrub: 0.5, invalidateOnRefresh: true
-      }
-    });
     // About: prints and screens drift at different speeds; the camera band settles as it passes.
     gsap.utils.toArray("[data-speed]").forEach(el => {
       gsap.fromTo(el, { yPercent: 8 * el.dataset.speed }, {
@@ -984,7 +1047,6 @@
       scrollTrigger: { trigger: ".contact", start: "top 90%", end: "top 30%", scrub: 0.6 }
     });
 
-    return () => wrap.classList.remove("is-pinned");
   });
 
   // Finale entrance, all widths: the rule draws down, the two lines surface out of a soft blur.
@@ -1006,18 +1068,74 @@
     });
   });
 
-  // Gallery lightbox on native <dialog>: Esc closes, ←/→ step through.
-  const shots = [...document.querySelectorAll(".track .shot")];
+  /* ---- The contact sheet: one hall at a time -----------------------
+   * Only the chosen hall is in the document. Holding every hall at once
+   * is what makes a page like this long enough to stutter.
+   * ---------------------------------------------------------------- */
+  const chipBar = document.querySelector(".venues");
+  const sheet = document.querySelector(".sheet");
+  const sheetHead = document.querySelector(".sheet-head");
   const lb = document.querySelector(".lightbox");
   const lbImg = lb.querySelector("img");
+  const lbCap = lb.querySelector(".lb-cap");
+  let venue = VENUES[0];
   let current = 0;
-  const show = i => {
-    current = (i + shots.length) % shots.length;
-    const img = shots[current].querySelector("img");
-    lbImg.src = img.src.replace(/w=\d+&h=\d+&fit=crop/, "w=2000"); // uncropped, larger
-    lbImg.alt = img.alt;
+
+  const slugFromHash = () => (location.hash.match(/^#venue\/([\w-]+)/) || [])[1];
+
+  const paintSheet = () => {
+    sheetHead.querySelector("b").textContent = venue.name;
+    sheetHead.querySelector("span").textContent = `${venue.frames.length}컷`;
+    sheet.setAttribute("aria-label", `${venue.name} 사진`);
+    sheet.innerHTML = venue.frames.map((f, i) => `
+      <button class="shot" type="button" aria-label="${f.alt} 크게 보기">
+        <img src="${f.thumb}" alt="${f.alt}" loading="lazy" decoding="async">
+        <span class="shot-no" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
+      </button>`).join("");
+    [...sheet.children].forEach((btn, i) => btn.addEventListener("click", () => open(i)));
+
+    if (seen) developSheet();
   };
-  shots.forEach((s, i) => s.addEventListener("click", () => { show(i); lb.showModal(); }));
+
+  // the sheet comes up out of the developer, frame by frame — on the first
+  // scroll into view, and again every time a different hall is chosen
+  let seen = false;
+  const developSheet = () => {
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) return;
+    gsap.fromTo(sheet.children,
+      { opacity: 0, filter: "brightness(2.4) contrast(.3)" },
+      { opacity: 1, filter: "brightness(1) contrast(1)", duration: .7, ease: "power2.out", stagger: .045 });
+  };
+  ScrollTrigger.create({
+    trigger: ".gallery", start: "top 75%", once: true,
+    onEnter: () => { seen = true; developSheet(); },
+  });
+
+  const selectVenue = (slug, push = true) => {
+    const next = VENUES.find(v => v.slug === slug);
+    if (!next || next === venue) return;
+    venue = next;
+    [...chipBar.children].forEach(c => c.setAttribute("aria-selected", String(c.dataset.slug === slug)));
+    paintSheet();
+    if (push) history.pushState(null, "", `#venue/${slug}`);
+  };
+
+  chipBar.innerHTML = VENUES.map(v => `
+    <button class="venue-chip" type="button" role="tab" data-slug="${v.slug}"
+            aria-selected="${v === VENUES[0]}">${v.name}</button>`).join("");
+  [...chipBar.children].forEach(c => c.addEventListener("click", () => selectVenue(c.dataset.slug)));
+  window.addEventListener("popstate", () => selectVenue(slugFromHash() || VENUES[0].slug, false));
+
+  // Lightbox on native <dialog>: Esc closes, ←/→ step through the hall.
+  const show = i => {
+    const list = venue.frames;
+    current = (i + list.length) % list.length;
+    lbImg.src = list[current].full;
+    lbImg.alt = list[current].alt;
+    lbCap.querySelector("b").textContent = venue.name;
+    lbCap.querySelector("i").textContent = `${current + 1} / ${list.length} · ${list[current].cap}`;
+  };
+  const open = i => { show(i); lb.showModal(); };
   lb.querySelector(".lb-prev").addEventListener("click", () => show(current - 1));
   lb.querySelector(".lb-next").addEventListener("click", () => show(current + 1));
   lb.querySelector(".lb-close").addEventListener("click", () => lb.close());
@@ -1026,6 +1144,10 @@
     if (e.key === "ArrowLeft") show(current - 1);
     if (e.key === "ArrowRight") show(current + 1);
   });
+
+  selectVenue(slugFromHash() || VENUES[0].slug, false);
+  if (!document.querySelector(".venue-chip[aria-selected=true]")) chipBar.firstElementChild.setAttribute("aria-selected", "true");
+  paintSheet();
 
   // Inquiry form: posts to a Google Apps Script web app, which mails the site owner's Gmail.
   // Paste the deployed web app URL here (see apps-script/README.md).
@@ -1069,15 +1191,23 @@
   // The camera: winding the lever advances to the next frame.
   const cam = document.querySelector(".camera");
   const frames = [...cam.querySelectorAll(".cam-window img")];
+  // the four cuts are the opening frame of each hall, so photographs are only
+  // ever written down in one place
+  frames.forEach((img, i) => {
+    const f = VENUES[i % VENUES.length].frames[0];
+    img.src = f.thumb;
+    img.alt = f.alt;
+    img.dataset.cap = f.cap;
+  });
   const camCap = cam.querySelector(".cam-cap");
   const camNum = cam.querySelector(".cam-num");
-  let frame = 0;
+  let cut = 0;
   cam.querySelector(".cam-lever").addEventListener("click", () => {
-    frames[frame].classList.remove("is-on");
-    frame = (frame + 1) % frames.length;
-    frames[frame].classList.add("is-on");
-    camCap.textContent = frames[frame].dataset.cap;
-    camNum.textContent = frame + 1;
+    frames[cut].classList.remove("is-on");
+    cut = (cut + 1) % frames.length;
+    frames[cut].classList.add("is-on");
+    camCap.textContent = frames[cut].dataset.cap;
+    camNum.textContent = cut + 1;
   });
 
   // The laptop: one project on screen at a time.
