@@ -920,13 +920,15 @@
     const TOTAL = 450; // 7:30, matches roll.time
 
     gsap.timeline({
-      scrollTrigger: { trigger: ".develop", start: "top top", end: "+=180%", pin: true, scrub: 0.6 }
+      scrollTrigger: { trigger: ".develop", start: "top top", end: "+=105%", pin: true, scrub: 0.6 }
     })
+      // The print and the code both land by ~70% of the pin. Holding an empty
+      // frame and an empty editor to the very end just reads as dead scroll.
       .fromTo(".develop-photo img",
-        { filter: "brightness(2.8) contrast(0.2)", opacity: 0.12 },
-        { filter: "brightness(1) contrast(1.05)", opacity: 1, ease: "none", duration: 1 }, 0)
+        { filter: "brightness(2.1) contrast(0.45)", opacity: 0.4 },
+        { filter: "brightness(1) contrast(1.05)", opacity: 1, ease: "none", duration: 0.72 }, 0)
       .fromTo(lines, { opacity: 0, x: -8 },
-        { opacity: 1, x: 0, duration: 0.1, ease: "none", stagger: 0.85 / lines.length }, 0)
+        { opacity: 1, x: 0, duration: 0.1, ease: "none", stagger: 0.6 / lines.length }, 0)
       .fromTo(".gauge span", { scaleX: 0 }, { scaleX: 1, ease: "none", duration: 1 }, 0)
       .fromTo(clock, { t: 0 }, {
         t: TOTAL, ease: "none", duration: 1,
