@@ -7,7 +7,7 @@
 <meta name="description" content="웨딩 사진을 찍고 웹을 만드는 연주의 포트폴리오">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --paper: #E4E5E0;   /* silver gelatin paper */
@@ -20,6 +20,8 @@
     --safe: #C2412D;    /* safelight */
     --serif: "Gowun Batang", "Nanum Myeongjo", serif;
     --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --expo: cubic-bezier(.16, 1, .3, 1);
     --gutter: clamp(16px, 4vw, 56px);
   }
   * { box-sizing: border-box; }
@@ -40,41 +42,122 @@
   .nw { white-space: nowrap; }
   :focus-visible { outline: 2px solid var(--safe); outline-offset: 3px; }
 
-  /* nav: difference blend keeps it legible over paper, photos and darkroom.
-     No pane behind it — a frosted one needs backdrop-filter, which isolates the
-     label from the page and turns the blend to mush over the light sections. */
+  /* nav: after Aveon (navbar.gallery). A thin bar; the menu opens as a paper
+     panel beside a photograph. Difference blend keeps the bar legible over
+     paper, photos and darkroom. No pane behind it — a frosted one needs
+     backdrop-filter, which isolates the label and turns the blend to mush. */
   .nav {
     position: fixed; inset: 0 0 auto 0; z-index: 22;
-    padding: 18px var(--gutter);
+    padding: 12px var(--gutter);
   }
   .nav-inner {
-    display: flex; justify-content: space-between; align-items: center;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     color: #fff; mix-blend-mode: difference;
   }
-  .nav a { text-decoration: none; font-weight: 500; }
-  .nav .name { font: 700 20px/1 var(--serif); }
-  .nav ul { display: flex; gap: clamp(16px, 3vw, 36px); list-style: none; margin: 0; padding: 0; }
+  .nav .name { justify-self: start; font: 700 20px/1 var(--serif); text-decoration: none; }
+  .nav-meta { margin: 0; font: 500 11px/1 var(--mono); letter-spacing: .18em; }
+  .menu-btn {
+    justify-self: end; display: inline-flex; align-items: center; gap: 10px;
+    min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+    color: inherit; font: 500 14px/1 var(--sans);
+  }
+  .menu-btn i { display: grid; gap: 5px; width: 22px; }
+  .menu-btn i::before, .menu-btn i::after { content: ""; height: 1.5px; background: currentColor; transition: translate .16s ease-out; }
+  .menu-btn:hover i::after { translate: -6px 0; }
 
-  /* hero */
+  html:has(.menu[open]) { overflow: hidden; }
+  .menu {
+    width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0;
+    border: 0; background: transparent; color: var(--ink);
+  }
+  .menu[open] { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); }
+  .menu::backdrop { background: rgba(22, 18, 17, .55); }
+  .menu-panel {
+    display: grid; grid-template-rows: auto 1fr auto; gap: 28px; overflow-y: auto;
+    padding: 12px clamp(20px, 3vw, 36px) 24px; background: var(--paper);
+  }
+  .menu-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .menu-top .name { font: 700 20px/1 var(--serif); text-decoration: none; }
+  .menu-top small { display: block; margin-top: 6px; font: 500 11px/1 var(--mono); letter-spacing: .16em; color: var(--mute); }
+  .menu-close {
+    min-width: 44px; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+    font: 500 14px/1 var(--sans); color: var(--ink);
+  }
+  .menu-links { align-self: center; margin: 0; padding: 0; list-style: none; }
+  .menu-links a {
+    display: flex; align-items: baseline; gap: 16px; padding: 6px 0; text-decoration: none;
+    font: 400 clamp(30px, 3.6vw, 46px)/1.2 var(--serif); letter-spacing: -.02em;
+    transition: opacity .16s ease-out;
+  }
+  .menu-links a span { min-width: 2ch; font: 500 11px/1 var(--mono); letter-spacing: .08em; color: var(--mute); }
+  .menu-links:has(a:hover, a:focus-visible) a:not(:hover, :focus-visible) { opacity: .38; }
+  .menu-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; margin: 0; font-size: 14px; line-height: 1.6; }
+  .menu-info dt, .menu-copy { font: 500 11px/1.4 var(--mono); letter-spacing: .14em; color: var(--mute); }
+  .menu-info dd { margin: 6px 0 0; }
+  .menu-info a { text-underline-offset: 3px; }
+  .menu-copy { grid-column: 1 / -1; margin: 0; }
+  .menu-photo { position: relative; margin: 0; overflow: hidden; background: var(--dark); }
+  .menu-photo img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(1) contrast(1.04) brightness(.8); opacity: 0; transition: opacity 480ms var(--expo);
+  }
+  .menu-photo img.is-on { opacity: 1; }
+  .menu-photo figcaption {
+    position: absolute; left: clamp(20px, 3vw, 40px); bottom: clamp(20px, 3vw, 36px);
+    font: 400 clamp(28px, 3.4vw, 52px)/1.1 var(--serif); letter-spacing: -.02em; color: var(--dark-ink);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .menu[open] .menu-panel { animation: panel-in 480ms var(--expo); }
+    .menu[open] .menu-links li { animation: rise-in 480ms var(--expo) backwards; animation-delay: calc(80ms + var(--i) * 45ms); }
+    .menu[open] .menu-photo { animation: fade-in 480ms ease-out; }
+  }
+  @keyframes panel-in { from { translate: -32px 0; opacity: 0; } }
+  @keyframes rise-in { from { translate: 0 14px; opacity: 0; } }
+  @keyframes fade-in { from { opacity: 0; } }
+
+  /* hero: after Our Roots (supahero.io). The headline is split by a row of
+     prints, the chosen one circled in red grease pencil the way frames are
+     marked on a contact sheet, and a frame-number index runs along the foot. */
   .hero {
     min-height: 100svh;
-    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--gutter); align-items: end;
-    padding: 96px var(--gutter) 56px;
+    display: grid; grid-template-rows: 1fr auto;
+    padding: 72px var(--gutter) 0;
   }
-  .hero-photo { grid-column: 6 / 13; grid-row: 1; margin: 0; height: min(82svh, 920px); overflow: hidden; }
-  .hero-photo img { width: 100%; height: 100%; object-fit: cover; }
-  /* no z-index here: a stacking context would isolate the h1 blend from the photo */
-  .hero-copy { grid-column: 1 / 9; grid-row: 1; position: relative; padding-bottom: 5vh; }
+  .hero-stage { display: grid; align-content: center; justify-items: center; gap: clamp(16px, 2.6vh, 28px); text-align: center; }
+  .hero-roll { margin: 0; font: 500 11px/1 var(--mono); letter-spacing: .22em; color: var(--mute); }
   .hero h1 {
     margin: 0;
-    font: 700 clamp(40px, 6.6vw, 100px)/1.14 var(--serif);
-    letter-spacing: -0.01em;
-    color: #fff; mix-blend-mode: difference; /* reads as a film negative where it crosses the photo */
+    font: 700 clamp(34px, 6.2vw, 100px)/1.08 var(--serif);
+    letter-spacing: -0.02em;
   }
   .hero h1 .line { display: block; overflow: hidden; padding-bottom: 0.06em; }
   .hero h1 .line > span { display: block; }
-  .hero p { max-width: 24em; margin: 28px 0 0; color: var(--mute); }
+  .hero-prints {
+    position: relative; display: flex; justify-content: center; align-items: center;
+    gap: clamp(8px, 1.6vw, 24px); margin: clamp(12px, 2.4vh, 28px) 0;
+  }
+  .hprint { width: clamp(80px, 15vw, 240px); height: auto; aspect-ratio: 4 / 3; object-fit: cover; filter: grayscale(1) contrast(1.04); }
+  .hprint-main { width: clamp(118px, 21vw, 330px); padding: clamp(5px, .8vw, 12px); background: #141416; }
+  .pencil {
+    position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+    width: clamp(150px, 27vw, 420px); height: auto; overflow: visible; pointer-events: none;
+  }
+  .pencil path { fill: none; stroke: var(--safe); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; vector-effect: non-scaling-stroke; }
+  .hero-sub { max-width: 30em; margin: 0; font-size: 15px; color: var(--mute); }
+  .hero-index { border-top: 1px solid var(--rule); overflow-x: auto; }
+  .hero-index ol { display: flex; justify-content: space-between; gap: 28px; margin: 0; padding: 0; list-style: none; }
+  .hero-index a {
+    position: relative; display: flex; gap: 10px; align-items: center; min-height: 56px; white-space: nowrap;
+    font: 500 12px/1 var(--mono); letter-spacing: .02em; color: var(--mute); text-decoration: none;
+    transition: color .16s ease-out;
+  }
+  .hero-index a b { font-weight: 500; color: var(--ink); }
+  .hero-index a::before {
+    content: ""; position: absolute; left: 0; top: -3.5px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink); opacity: 0; transition: opacity .16s ease-out;
+  }
+  .hero-index li:first-child a::before, .hero-index a:hover::before, .hero-index a:focus-visible::before { opacity: 1; }
+  .hero-index a:hover { color: var(--ink); }
 
   /* develop: the pinned scroll moment */
   .develop { background: var(--dark); color: var(--dark-ink); }
@@ -306,8 +389,8 @@
   @keyframes cue { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .finale-cue i { animation: none; } }
 
-  .contact { background: var(--dark); color: var(--dark-ink); padding: 72px var(--gutter) 40px; color-scheme: dark; }
-  .inquiry-wrap { max-width: 760px; margin: 0 auto 120px; }
+  .contact { background: var(--dark); color: var(--dark-ink); padding: 72px var(--gutter) 120px; color-scheme: dark; }
+  .inquiry-wrap { max-width: 760px; margin: 0 auto; }
   .inquiry-head { margin-bottom: 48px; text-align: center; }
   .inquiry-head h2 { margin: 0 0 14px; font: 400 clamp(30px, 3.4vw, 48px)/1.2 var(--serif); letter-spacing: .02em; }
   .inquiry-head p { margin: 0; color: var(--dark-mute); }
@@ -378,9 +461,49 @@
   }
   .lb-cap b { margin-right: 10px; font-weight: 500; color: var(--dark-ink); }
   .lb-cap i { font-style: normal; font-variant-numeric: tabular-nums; }
-  .foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; margin: 0; font-size: 14px; color: var(--dark-mute); }
-  .foot a { text-decoration: none; }
-  .foot a:hover { text-decoration: underline; }
+
+  /* footer: after ggdesign (footer.design). A paper band of links, a strip of
+     film whose perforations wind on as you scroll, and the last words set as
+     large as the darkroom will hold. */
+  .site-foot { background: var(--dark); color: var(--dark-ink); }
+  .foot-band {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 32px var(--gutter);
+    padding: 64px var(--gutter) 56px; background: var(--paper); color: var(--ink);
+  }
+  .foot-band h2 { margin: 0 0 14px; font: 500 11px/1.4 var(--mono); letter-spacing: .14em; color: var(--mute); }
+  .foot-band ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .foot-band a { display: inline-flex; align-items: center; min-height: 32px; font-size: 15px; text-decoration: none; }
+  .foot-band a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .foot-band p { max-width: 20em; margin: 0; font-size: 15px; color: var(--mute); }
+  .film {
+    --shift: 0px;
+    position: relative; height: 60px; overflow: hidden;
+    background:
+      linear-gradient(90deg, var(--paper) 0 14px, transparent 14px) var(--shift) 8px / 34px 10px repeat-x,
+      linear-gradient(90deg, var(--paper) 0 14px, transparent 14px) var(--shift) calc(100% - 8px) / 34px 10px repeat-x,
+      #0E0B0A;
+  }
+  .film-edge {
+    position: absolute; left: 0; top: 50%; translate: 0 -50%; margin: 0; white-space: nowrap;
+    font: 500 11px/1 var(--mono); letter-spacing: .28em; color: #8A7A6E;
+  }
+  .foot-dark { position: relative; padding: 40px var(--gutter) 0; }
+  .foot-count { margin: 0; text-align: right; font: 500 12px/1 var(--mono); letter-spacing: .14em; color: var(--dark-mute); font-variant-numeric: tabular-nums; }
+  .foot-big {
+    margin: clamp(24px, 6vw, 80px) 0 clamp(20px, 4vw, 48px);
+    font: 400 clamp(40px, calc((100vw - 2 * var(--gutter)) / 8.2), 240px)/1.05 var(--serif);
+    letter-spacing: -.04em; white-space: nowrap;
+  }
+  .foot-big .fl { display: inline-block; overflow: hidden; padding-bottom: .08em; vertical-align: top; }
+  .foot-big .fl > span { display: inline-block; }
+  .foot-row {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
+    padding: 14px 0 18px; border-top: 1px solid rgba(237, 230, 225, .16);
+    font: 500 12px/1.4 var(--mono); letter-spacing: .02em; color: var(--dark-mute);
+  }
+  .foot-row a { display: inline-flex; align-items: center; min-height: 32px; text-decoration: none; }
+  .foot-row a:hover { color: var(--dark-ink); }
+  .foot-row nav { display: flex; gap: 8px 24px; flex-wrap: wrap; }
 
   /* light meter: page-progress gauge */
   /* No isolation here on purpose: the name card has to reach z-index 22 in the
@@ -485,9 +608,11 @@
   }
 
   @media (max-width: 800px) {
-    .hero { grid-template-columns: 1fr; padding-top: 72px; }
-    .hero-photo { grid-column: 1; grid-row: 1; height: 58svh; }
-    .hero-copy { grid-column: 1; grid-row: 2; padding: 28px 0 0; }
+    .nav-inner { grid-template-columns: 1fr auto; }
+    .nav-meta { display: none; }
+    .menu[open] { grid-template-columns: 1fr; }
+    .menu-photo { display: none; }
+    .hero-index ol { justify-content: flex-start; }
     .develop-inner { grid-template-columns: 1fr; }
     .develop-photo { max-height: 60svh; }
     .sheet { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
@@ -502,6 +627,13 @@
     .inquiry .row, .inquiry .group .row { grid-template-columns: 1fr; }
     .lightbox { padding: 64px 16px 104px; }
     .lb-prev, .lb-next { top: auto; bottom: 12px; translate: none; }
+  }
+  @media (max-width: 600px) {
+    .foot-big { font-size: calc((100vw - 2 * var(--gutter)) / 5.6); white-space: normal; }
+    .foot-big .fl { display: block; }
+    .menu-info { grid-template-columns: 1fr; }
+    .hero-index ol { justify-content: space-between; gap: 8px; }
+    .hero-index a { flex-direction: column; align-items: flex-start; gap: 6px; min-height: 64px; justify-content: center; font-size: 11px; letter-spacing: 0; }
   }
 </style>
 </head>
@@ -538,29 +670,71 @@
 <nav class="nav" aria-label="주요 메뉴">
   <div class="nav-inner">
     <a class="name" href="#top">연주</a>
-    <ul>
-      <li><a href="#photo">사진</a></li>
-      <li><a href="#work">개발</a></li>
-      <li><a href="#contact">연락</a></li>
-    </ul>
+    <p class="nav-meta" aria-hidden="true">WEDDING PHOTO / WEB</p>
+    <button class="menu-btn" type="button" aria-haspopup="dialog">메뉴<i aria-hidden="true"></i></button>
   </div>
 </nav>
+
+<!-- the menu: a paper panel beside a photograph that changes with the link you point at -->
+<dialog class="menu" aria-label="메뉴">
+  <div class="menu-panel">
+    <div class="menu-top">
+      <a class="name" href="#top">연주<small>사진과 코드</small></a>
+      <button class="menu-close" type="button">닫기</button>
+    </div>
+    <ol class="menu-links">
+      <li style="--i:0"><a href="#develop" data-shot="0"><span>01</span>현상하는 사람</a></li>
+      <li style="--i:1"><a href="#photo" data-shot="1"><span>02</span>최근의 하루들</a></li>
+      <li style="--i:2"><a href="#about" data-shot="2"><span>03</span>두 개의 작업대</a></li>
+      <li style="--i:3"><a href="#work" data-shot="3"><span>04</span>만든 것들</a></li>
+      <li style="--i:4"><a href="#inquiry" data-shot="4"><span>05</span>문의 남기기</a></li>
+    </ol>
+    <dl class="menu-info">
+      <div><dt>[ 문의 ]</dt><dd>촬영이든 개발이든,<br>이틀 안에 메일로 답드려요.</dd></div>
+      <div><dt>[ 채널 ]</dt><dd><a href="https://instagram.com/">Instagram</a><br><a href="https://github.com/">GitHub</a></dd></div>
+      <p class="menu-copy">© 2026 연주</p>
+    </dl>
+  </div>
+  <figure class="menu-photo" aria-hidden="true">
+    <img class="is-on" src="https://images.unsplash.com/photo-1524650448000-02d0a2aeb6cb?w=1400&h=1600&fit=crop&q=80&auto=format" alt="" loading="lazy" data-cap="현상하는 사람">
+    <img src="https://images.unsplash.com/photo-1573676048035-9c2a72b6a12a?w=1400&h=1600&fit=crop&q=80&auto=format" alt="" loading="lazy" data-cap="최근의 하루들">
+    <img src="https://images.unsplash.com/photo-1466553359530-7387151ec321?w=1400&h=1600&fit=crop&q=80&auto=format" alt="" loading="lazy" data-cap="두 개의 작업대">
+    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1400&h=1600&fit=crop&q=80&auto=format" alt="" loading="lazy" data-cap="만든 것들">
+    <img src="https://images.unsplash.com/photo-1680624528924-7ee5542e4f4d?w=1400&h=1600&fit=crop&q=80&auto=format" alt="" loading="lazy" data-cap="문의 남기기">
+    <figcaption>현상하는 사람</figcaption>
+  </figure>
+</dialog>
 
 <div class="meter" aria-hidden="true"><span class="needle"></span></div>
 
 <main id="top">
   <header class="hero">
-    <figure class="hero-photo">
-      <img src="https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=2000&h=1500&fit=crop&q=80&auto=format"
-           width="2000" height="1500" alt="흑백으로 찍은 신랑과 신부" fetchpriority="high">
-    </figure>
-    <div class="hero-copy">
-      <h1><span class="line"><span>빛으로 기억하고,</span></span><span class="line"><span>코드로 남깁니다.</span></span></h1>
-      <p><span class="nw">웨딩 사진을 찍고,</span> <span class="nw">웹을 만드는 연주입니다.</span><br><span class="nw">두 일 모두 누군가의 하루를</span> <span class="nw">오래 꺼내 볼 수 있게</span> <span class="nw">만드는 일이라고 생각해요.</span></p>
+    <div class="hero-stage">
+      <p class="hero-roll">ROLL Nº 01 — HP5 PLUS 400</p>
+      <h1>
+        <span class="line"><span>빛으로 기억하고,</span></span>
+        <span class="hero-prints" aria-hidden="true">
+          <img class="hprint" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=600&fit=crop&q=80&auto=format" width="800" height="600" alt="">
+          <img class="hprint hprint-main" src="https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=1200&h=900&fit=crop&q=80&auto=format" width="1200" height="900" alt="" fetchpriority="high">
+          <img class="hprint" src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&h=600&fit=crop&q=80&auto=format" width="800" height="600" alt="">
+          <svg class="pencil" viewBox="0 0 420 300" preserveAspectRatio="none"><path pathLength="1" d="M196 22c-92 2-178 30-182 118 -4 92 96 142 206 138 104-4 188-50 186-134 -2-80-84-122-196-120 -40 1-76 8-104 20"/></svg>
+        </span>
+        <span class="line"><span>코드로 남깁니다.</span></span>
+      </h1>
+      <p class="hero-sub"><span class="nw">웨딩 사진을 찍고,</span> <span class="nw">웹을 만드는 연주입니다.</span> <span class="nw">두 일 모두 누군가의 하루를</span> <span class="nw">오래 꺼내 볼 수 있게</span> <span class="nw">만드는 일이라고 생각해요.</span></p>
     </div>
+    <nav class="hero-index" aria-label="페이지 차례">
+      <ol>
+        <li><a href="#develop"><b>01</b>현상</a></li>
+        <li><a href="#photo"><b>02</b>하루들</a></li>
+        <li><a href="#about"><b>03</b>작업대</a></li>
+        <li><a href="#work"><b>04</b>만든 것</a></li>
+        <li><a href="#inquiry"><b>05</b>문의</a></li>
+      </ol>
+    </nav>
   </header>
 
-  <section class="develop" aria-labelledby="develop-title">
+  <section class="develop" id="develop" aria-labelledby="develop-title">
     <div class="develop-inner">
       <figure class="develop-photo">
         <img src="https://images.unsplash.com/photo-1524650448000-02d0a2aeb6cb?w=1200&h=1500&fit=crop&q=80&auto=format"
@@ -600,7 +774,7 @@
     </div>
   </section>
 
-  <section class="about" aria-labelledby="about-title">
+  <section class="about" id="about" aria-labelledby="about-title">
     <div class="about-head">
       <h2 id="about-title">두 개의 작업대</h2>
       <p><span class="nw">카메라 가방과 노트북 가방을</span> <span class="nw">번갈아 메고 다닙니다.</span></p>
@@ -769,7 +943,7 @@
   </div>
 </section>
 
-<footer class="contact" id="inquiry">
+<section class="contact" id="inquiry" aria-label="문의">
   <div class="inquiry-wrap">
     <div class="inquiry-head">
       <h2>문의 남기기</h2>
@@ -837,11 +1011,47 @@
       </div>
     </form>
   </div>
-  <p class="foot">
-    <span>© 2026 연주</span>
-    <a href="https://github.com/">GitHub</a>
-    <a href="https://instagram.com/">Instagram</a>
-  </p>
+</section>
+
+<footer class="site-foot">
+  <div class="foot-band">
+    <div>
+      <h2>[ 페이지 ]</h2>
+      <ul>
+        <li><a href="#develop">현상하는 사람</a></li>
+        <li><a href="#photo">최근의 하루들</a></li>
+        <li><a href="#about">두 개의 작업대</a></li>
+        <li><a href="#work">만든 것들</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2>[ 채널 ]</h2>
+      <ul>
+        <li><a href="https://instagram.com/">Instagram</a></li>
+        <li><a href="https://github.com/">GitHub</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2>[ 문의 ]</h2>
+      <p><span class="nw">촬영이든 개발이든</span> <span class="nw">편하게 적어 주세요.</span></p>
+      <ul><li><a href="#inquiry">문의 남기기 →</a></li></ul>
+    </div>
+  </div>
+  <div class="film" aria-hidden="true">
+    <p class="film-edge">YEONJU ▸ HP5 PLUS 400 ▸ 33 ▸ 34 ▸ 35 ▸ 36 ▸ YEONJU ▸ HP5 PLUS 400 ▸ 33 ▸ 34 ▸ 35 ▸ 36 ▸ YEONJU ▸ HP5 PLUS 400 ▸ 33 ▸ 34 ▸ 35 ▸ 36 ▸ YEONJU ▸ HP5 PLUS 400 ▸ 33 ▸ 34 ▸ 35 ▸ 36</p>
+  </div>
+  <div class="foot-dark">
+    <p class="foot-count" aria-hidden="true">36 / 36</p>
+    <p class="foot-big"><span class="fl"><span>다음 롤에서</span></span> <span class="fl"><span>만나요.</span></span></p>
+    <div class="foot-row">
+      <span>© 2026 연주 — 사진과 코드</span>
+      <nav aria-label="바닥 링크">
+        <a href="https://instagram.com/">Instagram</a>
+        <a href="https://github.com/">GitHub</a>
+        <a href="#top">맨 위로 ↑</a>
+      </nav>
+    </div>
+  </div>
 </footer>
 
 <dialog class="lightbox" aria-label="사진 크게 보기">
@@ -928,11 +1138,12 @@
   // the visitor out of the page behind an envelope that no longer opened.
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     const hero = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } })
-      .fromTo(".hero-photo img",
-        { filter: "brightness(2.4) contrast(0.35)", scale: 1.06 },
-        { filter: "brightness(1) contrast(1)", scale: 1, duration: 2.2, ease: "power2.out" })
-      .from(".hero h1 .line > span", { yPercent: 110, duration: 1.1, stagger: 0.12 }, 0.5)
-      .from(".hero p", { opacity: 0, y: 12, duration: 0.8 }, 1.1);
+      .fromTo(".hprint",
+        { filter: "grayscale(1) brightness(2.4) contrast(0.35)" },
+        { filter: "grayscale(1) brightness(1) contrast(1.04)", duration: 2, stagger: 0.18, ease: "power2.out" })
+      .from(".hero h1 .line > span", { yPercent: 110, duration: 1.1, stagger: 0.12 }, 0.4)
+      .from(".pencil path", { strokeDashoffset: 1, duration: 0.9, ease: "power2.inOut" }, 1.5)
+      .from([".hero-roll", ".hero-sub", ".hero-index"], { opacity: 0, y: 12, duration: 0.8, stagger: 0.1 }, 1.1);
 
     const root = document.documentElement;
     const intro = document.querySelector(".intro");
@@ -1242,6 +1453,39 @@
       .to(".cam-blind", { opacity: 0, duration: 0.3, ease: "power1.out" });
   });
 
+  // Footer: the film winds on as the page runs out, and the last line surfaces.
+  mm.add("(prefers-reduced-motion: no-preference)", () => {
+    gsap.fromTo(".film", { "--shift": "0px" }, {
+      "--shift": "-340px", ease: "none",
+      scrollTrigger: { trigger: ".site-foot", start: "top bottom", end: "bottom bottom", scrub: 0.4 },
+    });
+    gsap.fromTo(".film-edge", { xPercent: 0 }, {
+      xPercent: -12, ease: "none",
+      scrollTrigger: { trigger: ".site-foot", start: "top bottom", end: "bottom bottom", scrub: 0.4 },
+    });
+    gsap.from(".foot-big .fl > span", {
+      yPercent: 105, duration: 1.1, ease: "power3.out", stagger: 0.12,
+      scrollTrigger: { trigger: ".foot-big", start: "top 92%", once: true },
+    });
+  });
+
+  // Menu on native <dialog>: Esc closes and focus stays inside while it is open.
+  const menu = document.querySelector(".menu");
+  const shots = [...menu.querySelectorAll(".menu-photo img")];
+  const shotCap = menu.querySelector(".menu-photo figcaption");
+  const showShot = i => {
+    shots.forEach((img, n) => img.classList.toggle("is-on", n === i));
+    shotCap.textContent = shots[i].dataset.cap;
+  };
+  document.querySelector(".menu-btn").addEventListener("click", () => menu.showModal());
+  menu.querySelector(".menu-close").addEventListener("click", () => menu.close());
+  menu.addEventListener("click", e => { if (e.target === menu || e.target.closest("a")) menu.close(); });
+  menu.querySelectorAll("[data-shot]").forEach(a => {
+    const i = Number(a.dataset.shot);
+    a.addEventListener("pointerenter", () => showShot(i));
+    a.addEventListener("focus", () => showShot(i));
+  });
+
   window.addEventListener("load", () => {
     startAtTop();
     requestAnimationFrame(startAtTop);
@@ -1391,12 +1635,17 @@
     // scrolled out of the viewport still paints a stray pane at the top of the
     // screen, so the lens is swapped out of the renderer's list until the
     // finale is actually in view. Upgrade path: a real API, if one lands.
+    // The shared canvas keeps its last frame after the lens leaves the list,
+    // which left a ghost pane over the paper footer — so it is hidden too.
     const setLensActive = (lens, on) => {
-      const list = window.__liquidGLRenderer__?.lenses;
+      const r = window.__liquidGLRenderer__;
+      const list = r?.lenses;
       if (!list) return;
       const i = list.indexOf(lens);
       if (on && i === -1) list.push(lens);
       if (!on && i !== -1) list.splice(i, 1);
+      const canvas = r.canvas || document.querySelector('canvas[style*="z-index: 21"]');
+      if (canvas) canvas.style.visibility = on ? "" : "hidden";
     };
     const parkLens = lens => {
       setLensActive(lens, false);
